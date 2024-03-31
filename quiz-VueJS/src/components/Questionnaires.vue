@@ -1,57 +1,63 @@
 <template>
   <div>
-    <h2>Liste des questionnaires</h2>
-    <ul>
-      <li v-for="questionnaire in questionnaires" :key="questionnaire.id">
+    <h3>{{ title }}</h3>
+    <ol>
+      <li v-for="(questionnaire, index) in questionnaires" :key="index">
         {{ questionnaire.name }}
         <button @click="deleteQuestionnaire(questionnaire.id)">Supprimer</button>
       </li>
-    </ul>
-    <form @submit.prevent="createQuestionnaire">
-      <input type="text" v-model="newQuestionnaireName" placeholder="Nom du questionnaire" required>
-      <button type="submit">Ajouter</button>
-    </form>
+    </ol>
+    <div>
+      <input type="text" v-model="newQuestionnaireName">
+      <button @click="createQuestionnaire">Ajouter questionnaire</button>
+    </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
   data() {
     return {
+      title: "Questionnaires",
       questionnaires: [],
       newQuestionnaireName: ''
-    };
+    }
   },
   mounted() {
-    this.fetchQuestionnaires();
+    this.getAllQuestionnaires();
   },
   methods: {
-    async fetchQuestionnaires() {
-      try {
-        const response = await axios.get('/quiz/api/v1.0/quiz');
-        this.questionnaires = response.data;
-      } catch (error) {
-        console.error('Erreur lors de la récupération des questionnaires', error);
+    getAllQuestionnaires() {
+      fetch('http://127.0.0.1:5000/quiz/api/v1.0/quiz')
+        .then(response => response.json())
+        .then(data => {
+          this.questionnaires = data;
+        });
+    },
+    createQuestionnaire() {
+      if (this.newQuestionnaireName.trim() !== '') {
+        fetch('http://127.0.0.1:5000/quiz/api/v1.0/quiz', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: this.newQuestionnaireName })
+        })
+        .then(response => response.json())
+        .then(data => {
+          this.questionnaires.push(data);
+          this.newQuestionnaireName = '';
+        });
       }
     },
-    async createQuestionnaire() {
-      try {
-        await axios.post('/quiz/api/v1.0/quiz', { name: this.newQuestionnaireName });
-        this.newQuestionnaireName = '';
-        this.fetchQuestionnaires();
-      } catch (error) {
-        console.error('Erreur lors de la création du questionnaire', error);
-      }
-    },
-    async deleteQuestionnaire(questionnaireId) {
-      try {
-        await axios.delete(`/quiz/api/v1.0/quiz/${questionnaireId}`);
-        this.fetchQuestionnaires();
-      } catch (error) {
-        console.error('Erreur lors de la suppression du questionnaire', error);
-      }
+    deleteQuestionnaire(questionnaireId) {
+      fetch(`http://127.0.0.1:5000/quiz/api/v1.0/quiz/${questionnaireId}`, {
+        method: 'DELETE'
+      })
+      .then(response => response.json())
+      .then(() => {
+        this.questionnaires = this.questionnaires.filter(item => item.id !== questionnaireId);
+      });
     }
   }
 }

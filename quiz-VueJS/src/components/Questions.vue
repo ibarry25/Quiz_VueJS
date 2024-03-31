@@ -1,57 +1,53 @@
 <template>
   <div>
-    <h2>Liste des questions</h2>
-    <ul>
-      <li v-for="question in questions" :key="question.id">
+    <h4>{{ questionnaire.name }}</h4>
+    <ol>
+      <li v-for="(question, index) in questionnaire.questions" :key="index">
         {{ question.title }}
         <button @click="deleteQuestion(question.id)">Supprimer</button>
       </li>
-    </ul>
-    <form @submit.prevent="createQuestion">
-      <input type="text" v-model="newQuestionTitle" placeholder="Titre de la question" required>
-      <button type="submit">Ajouter</button>
-    </form>
+    </ol>
+    <div>
+      <input type="text" v-model="newQuestionTitle">
+      <button @click="createQuestion">Ajouter question</button>
+    </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
+  props: ['quest'],
   data() {
     return {
-      questions: [],
+      questionnaire: this.quest,
       newQuestionTitle: ''
-    };
-  },
-  mounted() {
-    this.fetchQuestions();
+    }
   },
   methods: {
-    async fetchQuestions() {
-      try {
-        const response = await axios.get('/quiz/api/v1.0/question');
-        this.questions = response.data;
-      } catch (error) {
-        console.error('Erreur lors de la récupération des questions', error);
-      }
-    },
-    async createQuestion() {
-      try {
-        await axios.post('/quiz/api/v1.0/question', { title: this.newQuestionTitle });
-        this.newQuestionTitle = '';
-        this.fetchQuestions();
-      } catch (error) {
-        console.error('Erreur lors de la création de la question', error);
-      }
-    },
-    async deleteQuestion(questionId) {
-      try {
-        await axios.delete(`/quiz/api/v1.0/question/${questionId}`);
-        this.fetchQuestions();
-      } catch (error) {
-        console.error('Erreur lors de la suppression de la question', error);
-      }
+    createQuestion() {
+  if (this.newQuestionTitle.trim() !== '') {
+    fetch('http://127.0.0.1:5000/quiz/api/v1.0/question', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ title: this.newQuestionTitle, quiz_id: this.questionnaire.id }) // Utilisation de quiz_id au lieu de quizId
+    })
+    .then(response => response.json())
+    .then(data => {
+      this.questionnaire.questions.push(data);
+      this.newQuestionTitle = '';
+    });
+  }
+},
+    deleteQuestion(question_id) {
+      fetch(`http://127.0.0.1:5000/quiz/api/v1.0/question/${question_id}`, {
+        method: 'DELETE'
+      })
+      .then(response => response.json())
+      .then(() => {
+        this.questionnaire.questions = this.questionnaire.questions.filter(item => item.id !== questionId);
+      });
     }
   }
 }
