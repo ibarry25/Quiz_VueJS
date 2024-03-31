@@ -1,0 +1,60 @@
+Dans cette API Rest, nous pouvons :
+- Consulter tous les Quiz de l'API
+- Consulter toutes les questions de l'API
+- Créer autant de quiz que nous souhaitons
+- Créer autant de questions que nous souhaitons dans chaque quiz
+- Supprimer un Quiz
+- Supprimer une Question
+- Modifier le nom d'un Quiz et ses questions
+
+Commande pour lancer le serveur : 
+flask run
+
+
+Dans un autre terminal taper les commandes suivantes pour interagir avec le serveur :
+
+Créer un questionnaire :
+curl -X POST -H "Content-Type: application/json" -d '{"name": "Nouveau questionnaire"}' http://127.0.0.1:5000/quiz/api/v1.0/quiz
+(Le name ci-dessus est un exemple vous pouvez mettre le nom que vous voulez)
+
+
+Créer une question dans un questionnaire existant :
+curl -X POST -H "Content-Type: application/json" -d '{"title": "Question 1", "quiz_id": <quiz_id>}' http://127.0.0.1:5000/quiz/api/v1.0/question
+(Le titre ci-dessus de la question est un exemple vous pouvez mettre le titre que vous voulez)
+Aussi remplacez <quiz_id> par l'id du quiz dans lequel vous voulez rajouter la question
+
+Supprimer un quiz :
+curl -X DELETE http://127.0.0.1:5000/quiz/api/v1.0/quiz/<quiz_id>
+
+Supprimer une question :
+curl -X DELETE http://127.0.0.1:5000/quiz/api/v1.0/question/<question_id>
+
+Pour consulter tous les quiz : 
+curl http://127.0.0.1:5000/quiz/api/v1.0/quiz
+
+
+Pour consulter un quiz spécifique : 
+curl http://127.0.0.1:5000/quiz/api/v1.0/quiz/<quiz_id>
+
+Pour récupérer toutes les questions du quiz : 
+curl http://127.0.0.1:5000/quiz/api/v1.0/question
+
+Pour récupérer une question en particulier : 
+curl http://127.0.0.1:5000/quiz/api/v1.0/question/<question_id>
+
+
+Pour mettre à jour un quiz déjà existant :
+curl -X PUT -H "Content-Type: application/json" -d '{"name": "Mon nouveau quiz"}' http://127.0.0.1:5000/quiz/api/v1.0/quiz/<quiz_id>
+(Le name ci-dessus est un exemple vous pouvez mettre le nom que vous voulez)
+
+Pour mettre à jour une question déjà existante : 
+curl -X PUT -H "Content-Type: application/json" -d '{"title": "Nouveau titre de la question"}' http://127.0.0.1:5000/quiz/api/v1.0/question/<question_id>
+(Le titre ci-dessus de la question est un exemple vous pouvez mettre le titre que vous voulez)
+
+
+
+
+
+
+
+

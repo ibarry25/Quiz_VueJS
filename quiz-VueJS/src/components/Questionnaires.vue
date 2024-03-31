@@ -1,58 +1,58 @@
+<template>
+  <div>
+    <h2>Liste des questionnaires</h2>
+    <ul>
+      <li v-for="questionnaire in questionnaires" :key="questionnaire.id">
+        {{ questionnaire.name }}
+        <button @click="deleteQuestionnaire(questionnaire.id)">Supprimer</button>
+      </li>
+    </ul>
+    <form @submit.prevent="createQuestionnaire">
+      <input type="text" v-model="newQuestionnaireName" placeholder="Nom du questionnaire" required>
+      <button type="submit">Ajouter</button>
+    </form>
+  </div>
+</template>
+
 <script>
-import QuestionItem from './Questions.vue'
-// import HelloWorld from './components/HelloWorld.vue'
-let data = {
-  name: "",  
-  questions: [],
-}
+import axios from 'axios';
 
 export default {
-    props: {
-    quest: Object,
-    key: Number
-  },
   data() {
-    return data;
+    return {
+      questionnaires: [],
+      newQuestionnaireName: ''
+    };
+  },
+  mounted() {
+    this.fetchQuestionnaires();
   },
   methods: {
-    add: function () {
-      if (this.tmpLOL != "" && this.questions.length < 10) {
-        this.questions.push({ text: this.tmpLOL, checked: false });
-        this.tmpLOL = "";
+    async fetchQuestionnaires() {
+      try {
+        const response = await axios.get('/quiz/api/v1.0/quiz');
+        this.questionnaires = response.data;
+      } catch (error) {
+        console.error('Erreur lors de la récupération des questionnaires', error);
       }
     },
-    remove($event){
-        console.log();
-      this.questions.splice(this.questions.indexOf($event.question),1)
+    async createQuestionnaire() {
+      try {
+        await axios.post('/quiz/api/v1.0/quiz', { name: this.newQuestionnaireName });
+        this.newQuestionnaireName = '';
+        this.fetchQuestionnaires();
+      } catch (error) {
+        console.error('Erreur lors de la création du questionnaire', error);
+      }
+    },
+    async deleteQuestionnaire(questionnaireId) {
+      try {
+        await axios.delete(`/quiz/api/v1.0/quiz/${questionnaireId}`);
+        this.fetchQuestionnaires();
+      } catch (error) {
+        console.error('Erreur lors de la suppression du questionnaire', error);
+      }
     }
-  },
-  components: {
-    QuestionItem
-  },
-  mounted(){
-    fetch('http://127.0.0.1:5000/quiz/api/v1.0/quiz/1')
-      .then(response => response.json())
-      .then(json => {
-        this.name = json.name
-        this.questions = json.questions;
-      });
   }
 }
 </script>
-
-<template>
-  <!-- <img alt="Vue logo" src="./assets/logo.png" />
-    <HelloWorld msg="Hello Vue 3 + Vite" /> -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
-    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-  <div id="app" class="container">
-      <h3>{{ this.name }}</h3>
-    <ol>
-      <QuestionItem v-for="item in this.questions" :question="item" :key="item.id" @sup="remove"></QuestionItem>
-    </ol>
-  </div>
-    <span class="input-group-btn">
-      <input type="text" v-model="tmpLOL" @keyup.enter="add">
-      <button @click="add" class="btn btn-success" type="button">Ajouter</button>
-    </span>
-</template>
