@@ -1,4 +1,5 @@
 from flask import jsonify, request, render_template
+from flask_cors import cross_origin
 from .app import app
 from .models import(
     db_create_question,
@@ -18,17 +19,19 @@ from .models import(
 def main():
     return render_template('index.html') # On renvoie le fichier index.html
 
-@app.route('/quiz/api/v1.0/quiz', methods=["GET"])
+@app.route('/quiz/api/v1.0/quiz/', methods=["GET"])
 def get_all_quiz():
+    print("get_all_quiz")
     return jsonify(
-        [q.to_json() for q in db_get_all_quiz()] # On renvoie tous les quiz
+        [q.to_json() for q in db_get_all_quiz()]
     )
+
     
 @app.route('/quiz/api/v1.0/quiz/<int:quiz_id>', methods=["GET"])
-def get_quiz(quiz_id):
+def get_quiz(quiz_id): 
     return jsonify(db_get_quiz(quiz_id).to_json()) # On renvoie un quiz
 
-@app.route('/quiz/api/v1.0/question', methods=["GET"])
+@app.route('/quiz/api/v1.0/question/', methods=["GET"])
 def get_all_question():
     return jsonify([q.to_json() for q in db_get_all_question()]) # On renvoie toutes les questions
 
@@ -36,14 +39,14 @@ def get_all_question():
 def get_question(question_id):
     return jsonify(db_get_question(question_id).to_json()) # On renvoie une question
 
-@app.route('/quiz/api/v1.0/quiz', methods=["POST"])
+@app.route('/quiz/api/v1.0/quiz/', methods=["POST"])
 def create_quiz():
     json = request.json
     return jsonify(
         db_create_quiz(json).to_json() # On crée un quiz
     )
     
-@app.route('/quiz/api/v1.0/question', methods=["POST"])
+@app.route('/quiz/api/v1.0/question/', methods=["POST"])
 def create_question():
     json = request.json
     return jsonify(
