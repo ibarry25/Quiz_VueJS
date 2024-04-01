@@ -2,20 +2,25 @@
   <div class="rect titre">
     <h1>{{ title }}</h1>
   </div>
-    <div class="questionnaire">
-      <div class="rect quizz">
+  <div class="questionnaire">
+    <div class="rect quizz">
       <ol class="list-quiz">
         <h3>Vos Quizzes</h3>
         <li v-for="(questionnaire, index) in questionnaires" :key="index">
-          <button :id=questionnaire.quiz_id  @click="afficherQuestions(questionnaire.quiz_id)" class="choose-quiz"><span>{{ questionnaire.name }}</span></button>
-          <!-- <button @click="deleteQuestionnaire(questionnaire.id)">Supprimer</button> -->
+          <button :id="'quiz_' + questionnaire.quiz_id" @click="afficherQuestions(questionnaire.quiz_id)" :class="{ 'choose-quiz': true, 'selectionner': currentQuestionnaire.quiz_id === questionnaire.quiz_id }"><span>{{ questionnaire.name }}</span></button>
+          <div>
+            <button @click="modifierQuestionnaire(questionnaire.quiz_id)">Modifier</button>
+            <button @click="deleteQuestionnaire(questionnaire.quiz_id)">Supprimer</button>
+          </div>
         </li>
       </ol>
-      <div>
-        <input type="text" v-model="newQuestionnaireName">
-        <button @click="createQuestionnaire">Ajouter questionnaire</button>
+      <div id="new-quiz">
+        <!-- <input type="text" v-model="newQuestionnaireName">
+        <button @click="createQuestionnaire">Ajouter questionnaire</button> -->
       </div>
       <div id="error"></div>
+      <button class="choose-quiz" @click="createQuiz">Ajouter Quiz</button>
+
     </div>
     <div class="rect question">
       <Questions :quizId="currentQuestionnaire.quiz_id " :lesQuestion="currentQuestionnaire.questions"></Questions>
@@ -27,6 +32,7 @@
 
 import Questions from './Questions.vue';
 
+const requete = "http://127.0.0.1:5000/quiz/api/v1.0/quiz";
 
 export default {
   components: {
@@ -38,73 +44,118 @@ export default {
       questionnaires: [],
       newQuestionnaireName: '',
       currentQuestionnaire: { quiz_id: -1, questions: []},
-      // espaceQuest : new Questions(-1, [])
     }
   },
   mounted() {
     this.getAllQuestionnaires();
   },
   methods: {
-     getAllQuestionnaires() {
-      const requete = "http://127.0.0.1:5000/quiz/api/v1.0/quiz";
-        fetch(requete)
+    createQuiz() {
+      document.getElementById('new-quiz').innerHTML = `
+        <input type="text" id="new-quiz-text">
+        <button id="add-quiz">Ajouter</button>`;
+
+      document.getElementById('add-quiz').addEventListener('click', () => {
+        const newQuizText = document.getElementById('new-quiz-text').value;
+        if (!newQuizText) {
+          document.getElementById('error').innerHTML = 'Veuillez saisir un nom de questionnaire';
+          return;
+        }
+        this.newQuestionnaireName = newQuizText;
+        this.createQuestionnaire();
+      });
+    },
+    async afficherQuestions(quizId) {
+      this.currentQuestionnaire = this.questionnaires.find(questionnaire => questionnaire.quiz_id === quizId);
+      console.log(this.currentQuestionnaire);
+      // Ajouter en dessous des boutons pour supprimer, ou modifier le nom du questionnaire
+      document.getElementById('error').innerHTML = '';
+    },
+    async getAllQuestionnaires() {
+      await fetch(requete)
         .then(response => {
           if (response.ok) return response.json();
           else throw new Error('Request failed! : ', response.status);
-        }).then(this.testS)
-        .catch(this.onerror);
-    },
-    testS(data) {
-      console.log(data)
-      this.questionnaires = data;
-      if (this.questionnaires.length > 0) {
-        this.currentQuestionnaire = this.questionnaires[0];
-      }
+        })
+        .then(data => {
+          this.questionnaires = data;
+          if (this.questionnaires.length > 0) {
+            this.currentQuestionnaire = this.questionnaires[0];
+          }
+      }).catch(this.onerror);
     },
     onerror(err) {
-        // afficher l'erreur sur la div error
-        document.getElementById('error').innerHTML = err;
+      document.getElementById('error').innerHTML = err;
     },
-    createQuestionnaire() {
+    async createQuestionnaire() {
       if (this.newQuestionnaireName.trim() !== '') {
-        fetch('http://127.0.0.1:5000/quiz/api/v1.0/quiz', {
+        fetch(requete, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ name: this.newQuestionnaireName })
+          body: JSON.stringify({
+            name: this.newQuestionnaireName
+          })
         })
-        .then(response => response.json())
-        .then(data => {
-          this.questionnaires.push(data);
-          this.newQuestionnaireName = '';
+        .then(response => {
+          if (response.ok) {
+            this.newQuestionnaireName = '';
+            return this.getAllQuestionnaires();
+          } else {
+            throw new Error('Erreur lors de la création du questionnaire');
+          }
+        })
+        .catch(error => {
+          this.onerror(error.message);
         });
       }
     },
-    deleteQuestionnaire(questionnaireId) {
+    async deleteQuestionnaire(questionnaireId) {
       fetch(`http://127.0.0.1:5000/quiz/api/v1.0/quiz/${questionnaireId}`, {
         method: 'DELETE'
       })
-      .then(response => response.json())
-      .then(() => {
-        this.questionnaires = this.questionnaires.filter(item => item.id !== questionnaireId);
+      .then(response => {
+        if (response.ok) {
+          this.newQuestionnaireName = '';
+          return this.getAllQuestionnaires();
+        } else {
+          throw new Error('Erreur lors de la suppression du questionnaire');
+        }
+      }).catch(error => {
+        this.onerror(error.message);
       });
     },
-    afficherQuestions(questionnaireId) {
+    modifierQuestionnaire(questionnaireId) {
 
-
-    this.currentQuestionnaire = this.questionnaires.find(questionnaire => questionnaire.quiz_id === questionnaireId);
-    console.log('currentQuestionnaire:', this.currentQuestionnaire);
-    
-    for (let i = 0; i < this.questionnaires.length; i++) {
-      document.getElementById(this.questionnaires[i].quiz_id).classList.remove('selectionner');
+      document.getElementById('new-quiz').innerHTML = `
+        <input type="text" id="new-quiz-text">
+        <button id="add-quiz">Modifier</button>`;
+      document.getElementById('add-quiz').addEventListener('click', () => {
+        const newQuizText = document.getElementById('new-quiz-text').value;
+        if (!newQuizText) {
+          document.getElementById('error').innerHTML = 'Veuillez saisir un nom de questionnaire';
+          return;
+        }
+        fetch(requete + '/' + questionnaireId, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: newQuizText
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            this.newQuestionnaireName = '';
+            return this.getAllQuestionnaires();
+          } else {
+            throw new Error('Erreur lors de la modification du questionnaire');
+          }
+        });
+      });
     }
-    document.getElementById(this.currentQuestionnaire.quiz_id).classList.add('selectionner');
-
-
-
-  }
-
   }
 }
 </script>

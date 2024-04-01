@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/quiz/api/v1.0/*": {"origins": "http://localhost:3000"}})
 
 
 

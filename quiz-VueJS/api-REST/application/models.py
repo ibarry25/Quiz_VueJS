@@ -77,6 +77,8 @@ def db_create_question(json):
 # On supprime un quiz
 def db_delete_quiz(quiz_id):
     quiz = db_get_quiz(quiz_id)
+    for question in quiz.questions.all():
+        db.session.delete(question)
     db.session.delete(quiz)
     db.session.commit()
     return quiz

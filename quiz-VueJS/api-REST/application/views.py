@@ -19,6 +19,17 @@ from .models import(
 def main():
     return render_template('index.html') # On renvoie le fichier index.html
 
+from flask import jsonify, request
+
+@app.route('/quiz/api/v1.0/quiz/', methods=["OPTIONS"])
+def options_quiz():
+    response = jsonify({'message': 'OPTIONS request handled'})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    return response
+
+
 @app.route('/quiz/api/v1.0/quiz/', methods=["GET"])
 def get_all_quiz():
     print("get_all_quiz")
@@ -26,6 +37,13 @@ def get_all_quiz():
         [q.to_json() for q in db_get_all_quiz()]
     )
 
+@app.route('/quiz/api/v1.0/quiz', methods=["POST"])
+def create_quiz():
+    print("create_quiz")
+    json = request.json
+    return jsonify(
+        db_create_quiz(json).to_json()
+    )
     
 @app.route('/quiz/api/v1.0/quiz/<int:quiz_id>', methods=["GET"])
 def get_quiz(quiz_id): 
@@ -38,13 +56,6 @@ def get_all_question():
 @app.route('/quiz/api/v1.0/question/<int:question_id>', methods=["GET"])
 def get_question(question_id):
     return jsonify(db_get_question(question_id).to_json()) # On renvoie une question
-
-@app.route('/quiz/api/v1.0/quiz/', methods=["POST"])
-def create_quiz():
-    json = request.json
-    return jsonify(
-        db_create_quiz(json).to_json() # On crée un quiz
-    )
     
 @app.route('/quiz/api/v1.0/question/', methods=["POST"])
 def create_question():

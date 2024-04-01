@@ -3,7 +3,11 @@
     <h3>Questions</h3>
     <ul id="lst-quest">
       <li v-for="question in questions" :key="question.id">
-        {{ question.title }}
+        <span>{{ question.title }}</span>
+        <div>
+          <button @click="modifyQuestion(question.id)">Modifier</button>
+          <button @click="deleteQuestion(question.id)">Supprimer</button>
+        </div>
       </li>
     </ul>
     <div>
@@ -37,22 +41,15 @@ export default {
   },
   watch: {
     quizId(newQuizId) {
-
+      console.log('New quiz id: ', newQuizId);
       this.getAllQuestion();
-      this.afficherQuestions();
     }
   },
   methods: {
-    afficherQuestions() {
-      document.getElementById('lst-quest').innerHTML = '';
-      this.lesQuestion.forEach(question => {
-        document.getElementById('lst-quest').innerHTML += '<li>' + question.title + '</li>';
-      });
-    },
     createQuestion() {
-      document.getElementById('new-quest').innerHTML = '\
-        <input type="text" id="new-quest-text">\
-        <button id="add-quest"  >Ajouter</button>';
+      document.getElementById('new-quest').innerHTML = `
+        <input type="text" id="new-quest-text">
+        <button id="add-quest">Ajouter</button>`;
 
       document.getElementById('add-quest').addEventListener('click', () => {
         const newQuestionText = document.getElementById('new-quest-text').value;
@@ -72,25 +69,18 @@ export default {
           })
         }).then(response => {
           if (response.ok) {
-            return response.json();
+            console.log('Question added');
+            return this.getAllQuestion();
           } else {
             throw new Error('Request failed! : ', response.status);
           }
-        }).then(data => {
-          this.getAllQuestion();
-          document.getElementById('new-quest').innerHTML = '';
-          document.getElementById('error-quiz').innerHTML = '';
         }).catch(error => {
           document.getElementById('error-quiz').innerHTML = error;
-
-      });
-
-    }); 
-
-
+        });
+      }); 
     },
-    getAllQuestion(){
-      fetch(this.request)
+    async getAllQuestion(){
+      await fetch(this.request)
       .then(response => {
         if (response.ok) return response.json();
         else throw new Error('Request failed! : ', response.status);
@@ -100,8 +90,54 @@ export default {
       }).catch(error => {
         document.getElementById('error-quiz').innerHTML = error;
       });
+    },
+    deleteQuestion(idQuestion) {
+      fetch(this.request + idQuestion, {
+        method: 'DELETE'
+      }).then(response => {
+        if (response.ok) {
+          return this.getAllQuestion();
+        } else {
+          throw new Error('Request failed! : ', response.status);
+        }
+      }).catch(error => {
+        document.getElementById('error-quiz').innerHTML = error;
+      });
+    },
+    modifyQuestion(idQuestion) {
+      const question = this.questions.find(question => question.id === idQuestion);
+      document.getElementById('new-quest').innerHTML = `
+        <input type="text" id="new-quest-text" value="${question.title}">
+        <button id="modify-quest">Modifier</button>`;
 
+      document.getElementById('modify-quest').addEventListener('click', () => {
+        const newQuestionText = document.getElementById('new-quest-text').value;
+        if (!newQuestionText) {
+          document.getElementById('error-quiz').innerHTML = 'Veuillez saisir une question';
+          return;
+        }
+        
+        fetch(this.request + idQuestion, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            title: newQuestionText
+          })
+        }).then(response => {
+          if (response.ok) {
+            console.log('Question modified');
+            return this.getAllQuestion();
+          } else {
+            throw new Error('Request failed! : ', response.status);
+          }
+        }).catch(error => {
+          document.getElementById('error-quiz').innerHTML = error;
+        });
+      });
     }
   }
 };
+
 </script>
