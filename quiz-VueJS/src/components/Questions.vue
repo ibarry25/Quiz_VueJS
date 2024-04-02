@@ -33,7 +33,7 @@ export default {
   data() {
     return {
       questions: [], // Placeholder for the questions data
-      request : 'http://127.0.0.1:5000/quiz/api/v1.0/question/'
+      request : 'http://127.0.0.1:5000/quiz/api/v1.0/question'
     };
   },
   mounted() {
@@ -57,8 +57,9 @@ export default {
           document.getElementById('error-quiz').innerHTML = 'Veuillez saisir une question';
           return;
         }
+        console.log('New question: ', this.quizId);
         
-        fetch(this.request, {
+        fetch(this.request , {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -80,7 +81,9 @@ export default {
       }); 
     },
     async getAllQuestion(){
-      await fetch(this.request)
+      const request = this.request + '?quiz_id=' + this.quizId;
+      console.log('Request: ', request);
+      await fetch(request)
       .then(response => {
         if (response.ok) return response.json();
         else throw new Error('Request failed! : ', response.status);
@@ -92,7 +95,7 @@ export default {
       });
     },
     deleteQuestion(idQuestion) {
-      fetch(this.request + idQuestion, {
+      fetch(this.request + '/' + idQuestion, {
         method: 'DELETE'
       }).then(response => {
         if (response.ok) {
@@ -117,7 +120,7 @@ export default {
           return;
         }
         
-        fetch(this.request + idQuestion, {
+        fetch(this.request + '/'+ idQuestion, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'

@@ -49,8 +49,12 @@ def create_quiz():
 def get_quiz(quiz_id): 
     return jsonify(db_get_quiz(quiz_id).to_json()) # On renvoie un quiz
 
-@app.route('/quiz/api/v1.0/question/', methods=["GET"])
+@app.route('/quiz/api/v1.0/question', methods=["GET"])
 def get_all_question():
+    # si on a un paramètre quiz_id dans la requête, on renvoie les questions du quiz correspondant
+    if 'quiz_id' in request.args:
+        quiz_id = request.args.get('quiz_id')
+        return jsonify([q.to_json() for q in Question.query.filter_by(questionnaire_id=quiz_id).all()])
     return jsonify([q.to_json() for q in db_get_all_question()]) # On renvoie toutes les questions
 
 @app.route('/quiz/api/v1.0/question/<int:question_id>', methods=["GET"])

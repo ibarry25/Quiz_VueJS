@@ -66,6 +66,7 @@ def db_create_quiz(json):
 
 # On crée une question
 def db_create_question(json):
+    print(json)
     question = Question(
         title=json['title'],
         questionnaire_id=json['quiz_id'],
